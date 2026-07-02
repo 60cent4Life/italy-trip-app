@@ -36,9 +36,11 @@ export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onVie
           <div style={{background:trip.is_live?"#162318":"#1C1C1C",padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12}}>
             <div>
               <div style={{color:trip.is_live?GRN:"#8A9BB0",fontSize:16,fontWeight:700}}>{trip.is_live?"🟢  STUDENT PORTAL IS LIVE":"🔴  STUDENT PORTAL IS CLOSED"}</div>
-              <div style={{color:DIM,fontSize:12,marginTop:3}}>{trip.is_live?`Students can log in and select rooms for "${trip.name}".`:"Click the button to open — students can log in immediately."}</div>
+              <div style={{color:DIM,fontSize:12,marginTop:3}}>{admin?.role!=="owner"?"Only the owner can open or close the portal.":trip.is_live?`Students can log in and select rooms for "${trip.name}".`:"Click the button to open — students can log in immediately."}</div>
             </div>
-            <button onClick={onToggleLive} style={{padding:"12px 28px",borderRadius:8,border:`2px solid ${trip.is_live?"#FF7B72":GRN}`,background:trip.is_live?"#3A1A1A":"#162318",color:trip.is_live?"#FF7B72":GRN,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"'Georgia',serif",minWidth:180}}>{trip.is_live?"🔒  Close Portal":"🚀  Open Portal"}</button>
+            {admin?.role==="owner"
+              ? <button onClick={onToggleLive} style={{padding:"12px 28px",borderRadius:8,border:`2px solid ${trip.is_live?"#FF7B72":GRN}`,background:trip.is_live?"#3A1A1A":"#162318",color:trip.is_live?"#FF7B72":GRN,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"'Georgia',serif",minWidth:180}}>{trip.is_live?"🔒  Close Portal":"🚀  Open Portal"}</button>
+              : <div style={{padding:"12px 28px",borderRadius:8,border:"2px solid #30363D",background:"#1C1C1C",color:DIM,fontSize:14,fontWeight:700,fontFamily:"'Georgia',serif",minWidth:180,textAlign:"center"}}>🔒 Owner Only</div>}
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:10,marginBottom:22}}>
