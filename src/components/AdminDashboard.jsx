@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, Card, Lbl, TopBar, Spinner } from "../shared.jsx";
-import { simpleHash, getAllTrips, getAdminByEmail, updateAdminPassword, getAllAdmins, createAdmin, deleteAdmin } from "../lib/db.js";
+import { BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, Card, Lbl, TopBar, Spinner, ConfirmModal } from "../shared.jsx";
+import { simpleHash, getAllTrips, getAdminByEmail, updateAdminPassword, getAllAdmins, createAdmin, deleteAdmin, deleteTrip } from "../lib/db.js";
 
 export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
   const [trips,setTrips]=useState([]);
@@ -18,6 +18,8 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
   const [adminErr,setAdminErr]=useState("");
   const [adminLoading,setAdminLoading]=useState(false);
   const [confirmDeleteId,setConfirmDeleteId]=useState(null);
+  const [deleteTripTarget,setDeleteTripTarget]=useState(null);
+  const [deletingTrip,setDeletingTrip]=useState(false);
 
   useEffect(()=>{
     getAllTrips().then(t=>{ setTrips(t); setLoading(false); }).catch(()=>setLoading(false));
@@ -26,6 +28,17 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
   useEffect(()=>{
     if(admin.role==="owner") getAllAdmins().then(setAdmins).catch(()=>{});
   },[admin.role]);
+
+  const handleDeleteTrip=async()=>{
+    if(!deleteTripTarget) return;
+    setDeletingTrip(true);
+    try{
+      await deleteTrip(deleteTripTarget.id);
+      setTrips(await getAllTrips());
+      setDeleteTripTarget(null);
+    }catch(e){ alert(e.message || "Could not delete trip."); }
+    setDeletingTrip(false);
+  };
 
   const handleChangePassword=async()=>{
     setPwErr(""); setPwOk("");
@@ -160,20 +173,36 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             {trips.map(trip=>(
-              <button key={trip.id} onClick={()=>onOpenTrip(trip)} style={{background:CARD,border:`1px solid ${BORD}`,borderRadius:10,padding:"18px 20px",cursor:"pointer",fontFamily:"'Georgia',serif",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center",gap:16}}>
-                <div>
-                  <div style={{color:TXT,fontSize:17,fontWeight:600}}>{trip.name}</div>
-                  <div style={{color:DIM,fontSize:13,marginTop:3}}>{(trip.cities||[]).join(" · ")}</div>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
-                  <div style={{padding:"3px 10px",borderRadius:20,background:trip.is_live?"#162318":"#1C1C1C",border:`1px solid ${trip.is_live?GRN:"#4A5568"}`,color:trip.is_live?GRN:"#4A5568",fontSize:11}}>{trip.is_live?"🟢 Live":"🔴 Closed"}</div>
-                  <div style={{color:"#4A5568",fontSize:11}}>Open →</div>
-                </div>
-              </button>
+              <div key={trip.id} style={{background:CARD,border:`1px solid ${BORD}`,borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
+                <button onClick={()=>onOpenTrip(trip)} style={{flex:1,background:"transparent",border:"none",padding:"18px 20px",cursor:"pointer",fontFamily:"'Georgia',serif",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center",gap:16}}>
+                  <div>
+                    <div style={{color:TXT,fontSize:17,fontWeight:600}}>{trip.name}</div>
+                    <div style={{color:DIM,fontSize:13,marginTop:3}}>{(trip.cities||[]).join(" · ")}</div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+                    <div style={{padding:"3px 10px",borderRadius:20,background:trip.is_live?"#162318":"#1C1C1C",border:`1px solid ${trip.is_live?GRN:"#4A5568"}`,color:trip.is_live?GRN:"#4A5568",fontSize:11}}>{trip.is_live?"🟢 Live":"🔴 Closed"}</div>
+                    <div style={{color:"#4A5568",fontSize:11}}>Open →</div>
+                  </div>
+                </button>
+                {admin.role==="owner"&&(
+                  <button onClick={()=>setDeleteTripTarget(trip)} title="Delete trip" style={{...pbtn("transparent","#FF7B72","#30363D"),padding:"8px 12px",fontSize:16,marginRight:14}}>🗑️</button>
+                )}
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      {deleteTripTarget&&(
+        <ConfirmModal
+          title="Delete This Trip?"
+          message={`This will permanently delete "${deleteTripTarget.name}" — including its roster, all student accounts, room selections, and registration data. This cannot be undone.`}
+          confirmLabel={deletingTrip?"Deleting…":"🗑️ Delete Trip"}
+          confirmColor={RED}
+          onConfirm={handleDeleteTrip}
+          onCancel={()=>setDeleteTripTarget(null)}
+        />
+      )}
     </div>
   );
 }
