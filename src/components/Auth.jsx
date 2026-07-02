@@ -5,7 +5,47 @@
 // ============================================================================
 import { useState } from "react";
 import { BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, Card, Lbl, ErrBox } from "../shared.jsx";
-import { simpleHash, getAdmin, createAdmin, getStudentByEmail, registerStudent } from "../lib/db.js";
+import { simpleHash, getAdminByEmail, createAdmin, getStudentByEmail, registerStudent } from "../lib/db.js";
+
+export function AdminEmailLogin({onFound,onBack}){
+  const [email,setEmail]=useState("");
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+
+  const submit=async()=>{
+    if(!email.trim()){setErr("Enter your email address.");return;}
+    setErr(""); setLoading(true);
+    try{
+      const a = await getAdminByEmail(email.trim());
+      if(!a){ setErr("No admin account found with that email."); setLoading(false); return; }
+      onFound(a);
+    }catch(e){ setErr("Something went wrong. Please try again."); }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{minHeight:"100vh",background:BG,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Georgia',serif",padding:24}}>
+      <div style={{maxWidth:400,width:"100%"}}>
+        <div style={{textAlign:"center",marginBottom:24}}>
+          <div style={{fontSize:44,marginBottom:8}}>🇮🇹</div>
+          <div style={{fontSize:10,letterSpacing:"0.2em",color:DIM,textTransform:"uppercase",marginBottom:4}}>NCDSB · Hamilton Dante</div>
+          <h1 style={{fontSize:26,fontWeight:400,color:TXT,margin:0}}>Italy Trip Portal</h1>
+        </div>
+        <Card>
+          <div style={{color:TXT,fontSize:16,marginBottom:4,fontWeight:500}}>Admin Login</div>
+          <div style={{color:DIM,fontSize:13,marginBottom:18}}>Enter your admin email to continue.</div>
+          <Lbl>Email Address</Lbl>
+          <input autoFocus style={{...inp,marginBottom:4}} type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
+          <ErrBox msg={err}/>
+          <button onClick={submit} disabled={loading} style={{...pbtn(RED,"#fff"),width:"100%",marginTop:14,padding:13,fontSize:15}}>{loading?"Checking…":"Continue →"}</button>
+        </Card>
+        <div style={{textAlign:"center",marginTop:14}}>
+          <button onClick={onBack} style={{background:"transparent",border:"none",color:DIM,fontSize:13,cursor:"pointer",textDecoration:"underline"}}>← Back to Home</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function AdminLogin({admin,onDone,onBack}){
   const [pass,setPass]=useState("");
@@ -56,7 +96,7 @@ export function AdminRegister({onDone}){
     if(f.pass.length<6){setErr("Password must be at least 6 characters.");return;}
     setErr(""); setLoading(true);
     try{
-      const admin = await createAdmin({ username:f.username.trim(), email:f.email.trim(), passHash:simpleHash(f.pass) });
+      const admin = await createAdmin({ username:f.username.trim(), email:f.email.trim(), passHash:simpleHash(f.pass), role:'owner' });
       onDone(admin);
     }catch(e){ setErr("Could not create account. " + (e.message||"")); }
     setLoading(false);
@@ -71,7 +111,8 @@ export function AdminRegister({onDone}){
           <h1 style={{fontSize:26,fontWeight:400,color:TXT,margin:"0 0 2px"}}>Italy Trip Portal</h1>
         </div>
         <Card>
-          <div style={{color:TXT,fontSize:16,marginBottom:18,fontWeight:500}}>Create Admin Account</div>
+          <div style={{color:TXT,fontSize:16,marginBottom:2,fontWeight:500}}>Create Owner Account</div>
+          <div style={{color:DIM,fontSize:12,marginBottom:16}}>This is the first admin account and can never be removed. You can add more admins later from your dashboard.</div>
           <Lbl>Name / Username</Lbl>
           <input style={{...inp,marginBottom:12}} placeholder="e.g. Dan Seixeiro" value={f.username} onChange={e=>setF({...f,username:e.target.value})}/>
           <Lbl>Email</Lbl>
