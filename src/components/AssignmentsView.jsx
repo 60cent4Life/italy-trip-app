@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { SLOTS, CITY_CLR, BG, CARD, BORD, DIM, TXT, RED, GRN, pbtn, TopBar, Spinner, flattenRooms, occupiedMap, getCityDateLabel } from "../shared.jsx";
-import { getRoster, getSelections } from "../lib/db.js";
+import { getRoster, getSelections, getAllStudentAccounts } from "../lib/db.js";
 
 export function AssignmentsView({trip,admin,onBack}){
   const [roster,setRoster]=useState([]);
+  const [accounts,setAccounts]=useState([]);
   const [selections,setSelections]=useState({});
   const [loading,setLoading]=useState(true);
   const [tab,setTab]=useState("overview");
 
   useEffect(()=>{
-    Promise.all([getRoster(trip.id), getSelections(trip.id)]).then(([r,s])=>{ setRoster(r); setSelections(s); setLoading(false); });
+    Promise.all([getRoster(trip.id), getSelections(trip.id), getAllStudentAccounts(trip.id)]).then(([r,s,a])=>{ setRoster(r); setSelections(s); setAccounts(a); setLoading(false); });
   },[trip.id]);
 
   if(loading) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Room Assignments" onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}/><Spinner label="Loading…"/></div>;
@@ -20,7 +21,20 @@ export function AssignmentsView({trip,admin,onBack}){
   const completeNames=new Set(Object.values(selections).filter(s=>Object.keys(s.cityPicks||{}).length===trip.cities.length).map(s=>s.name));
   const anyAssignedNames=new Set(Object.values(selections).filter(s=>Object.keys(s.cityPicks||{}).length>0).map(s=>s.name));
 
-  const rosterLookup={}; roster.forEach(s=>{ rosterLookup[s.name]={passport:s.passport||"",dob:s.dob||""}; });
+  // A registered student's own submitted passport/DOB/gender (which they may
+  // have corrected during registration) takes priority over the original
+  // roster upload — this is what actually travels with them, not the paste.
+  const infoFor = (name) => {
+    const acct = accounts.find(a=>a.name.toLowerCase()===name.toLowerCase());
+    const r = roster.find(x=>x.name===name);
+    return {
+      gender: acct?.gender || r?.gender || "",
+      dob: acct?.dob || r?.dob || "",
+      passport: acct?.passport || r?.passport || "",
+    };
+  };
+
+  const rosterLookup={}; roster.forEach(s=>{ rosterLookup[s.name]=infoFor(s.name); });
   const slotCells=(name)=>{ if(!name) return ["","",""]; const i=rosterLookup[name]||{}; return [name, i.passport||"—", i.dob||"—"]; };
 
   const exportExcel=()=>{
@@ -28,8 +42,8 @@ export function AssignmentsView({trip,admin,onBack}){
     const sumRows=[["Room Allocation Summary"],[`Trip: ${trip.name}`],[],
       ["#","Last","First","Gender","DOB","Passport",...trip.cities.flatMap(c=>[`${c} Hotel`,`${c} Room`,`${c} Slot`])]];
     roster.forEach((s,i)=>{
-      const sel=selections[s.name]; const parts=s.name.split(", ");
-      sumRows.push([i+1,parts[0]||s.name,parts[1]||"",s.gender,s.dob,s.passport,
+      const sel=selections[s.name]; const parts=s.name.split(", "); const info=infoFor(s.name);
+      sumRows.push([i+1,parts[0]||s.name,parts[1]||"",info.gender,info.dob,info.passport,
         ...trip.cities.flatMap(c=>{ const p=sel?.cityPicks?.[c]; const rm=(rooms[c]||[]).find(r=>r.key===p?.key); return [rm?.hotelName||"",rm?.label||"",p?.slot?`P${p.slot}`:""]; })]);
     });
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows),"All Students");
