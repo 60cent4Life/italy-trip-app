@@ -9,7 +9,7 @@ import { ROOM_TYPES, ROOM_SIZES, SLOTS, CITY_CLR, BG, CARD, BORD, DIM, TXT, RED,
 import { upsertRoster, getRoster, updateTripSetupData, updateTripCityDates } from "../lib/db.js";
 import { parsePastedRoster } from "../lib/parsePastedRoster.js";
 
-export function SetupWizard({trip,onDone,onBack,onUpdateTrip}){
+export function SetupWizard({trip,admin,onDone,onBack,onUpdateTrip}){
   const [roster,setRoster]=useState([]);
   const [setupData,setSetupData]=useState(trip.setup_data||{});
   const [cityDates,setCityDates]=useState(trip.cityDates||trip.city_dates||{});
@@ -120,7 +120,7 @@ export function SetupWizard({trip,onDone,onBack,onUpdateTrip}){
   // ── ROSTER STEP ────────────────────────────────────────────────────────────
   if(step==="roster") return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif"}}>
-      <TopBar title="Setup — Roster" onBack={onBack} backLabel="Trip"/>
+      <TopBar title="Setup — Roster" onBack={onBack} backLabel="Trip" adminName={admin?.username}/>
       <div style={{maxWidth:520,margin:"0 auto",padding:"28px 16px"}}>
         <Card>
           <div style={{color:TXT,fontSize:16,marginBottom:4,fontWeight:500}}>Upload Student Roster</div>
@@ -161,7 +161,7 @@ export function SetupWizard({trip,onDone,onBack,onUpdateTrip}){
   // ── CITY SELECT ────────────────────────────────────────────────────────────
   if(step==="city_select") return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif"}}>
-      <TopBar title={`Setup — ${city}`} onBack={()=>setStep("roster")} backLabel="Roster"/>
+      <TopBar title={`Setup — ${city}`} onBack={()=>setStep("roster")} backLabel="Roster" adminName={admin?.username}/>
       <div style={{maxWidth:560,margin:"0 auto",padding:"28px 16px"}}>
         <CityProg cities={trip.cities} cityIdx={cityIdx} isCityDone={isCityDone} onJump={i=>{setCityIdx(i);setHotelIdx(0);setStep("city_select");}}/>
         <Card style={{border:`1px solid ${col}44`}}>
@@ -235,7 +235,7 @@ export function SetupWizard({trip,onDone,onBack,onUpdateTrip}){
   // ── HOTEL NAME ─────────────────────────────────────────────────────────────
   if(step==="hotel_name") return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif"}}>
-      <TopBar title={`${city} — Hotel ${hotelIdx+1}`} onBack={()=>{if(hotelIdx>0){setHotelIdx(hotelIdx-1);setStep("hotel_gender");}else setStep("city_select");}} backLabel={hotelIdx>0?`Hotel ${hotelIdx}`:"City"}/>
+      <TopBar title={`${city} — Hotel ${hotelIdx+1}`} onBack={()=>{if(hotelIdx>0){setHotelIdx(hotelIdx-1);setStep("hotel_gender");}else setStep("city_select");}} backLabel={hotelIdx>0?`Hotel ${hotelIdx}`:"City"} adminName={admin?.username}/>
       <div style={{maxWidth:520,margin:"0 auto",padding:"28px 16px"}}>
         <CityProg cities={trip.cities} cityIdx={cityIdx} isCityDone={isCityDone} onJump={i=>{setCityIdx(i);setHotelIdx(0);setStep("city_select");}}/>
         <Card style={{border:`1px solid ${col}44`}}>
@@ -259,7 +259,7 @@ export function SetupWizard({trip,onDone,onBack,onUpdateTrip}){
   // ── HOTEL GENDER ───────────────────────────────────────────────────────────
   if(step==="hotel_gender") return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif"}}>
-      <TopBar title={`${city} — ${hotel?.name}`} onBack={()=>setStep("hotel_name")} backLabel="Hotel Name"/>
+      <TopBar title={`${city} — ${hotel?.name}`} onBack={()=>setStep("hotel_name")} backLabel="Hotel Name" adminName={admin?.username}/>
       <div style={{maxWidth:520,margin:"0 auto",padding:"28px 16px"}}>
         <CityProg cities={trip.cities} cityIdx={cityIdx} isCityDone={isCityDone} onJump={i=>{setCityIdx(i);setHotelIdx(0);setStep("city_select");}}/>
         <Card style={{border:`1px solid ${col}44`}}>
@@ -290,7 +290,7 @@ export function SetupWizard({trip,onDone,onBack,onUpdateTrip}){
     const mRoomTotal=ROOM_TYPES.reduce((n,t)=>n+(parseInt(mtc[t])||0),0);
     return (
       <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif",paddingBottom:40}}>
-        <TopBar title={`${city} — ${hotel.name} Rooms`} onBack={()=>setStep("hotel_gender")} backLabel="Gender"/>
+        <TopBar title={`${city} — ${hotel.name} Rooms`} onBack={()=>setStep("hotel_gender")} backLabel="Gender" adminName={admin?.username}/>
         <div style={{maxWidth:620,margin:"0 auto",padding:"24px 16px"}}>
           <CityProg cities={trip.cities} cityIdx={cityIdx} isCityDone={isCityDone} onJump={i=>{setCityIdx(i);setHotelIdx(0);setStep("city_select");}}/>
           <Card style={{border:`1px solid ${col}44`}}>
@@ -352,7 +352,7 @@ export function SetupWizard({trip,onDone,onBack,onUpdateTrip}){
     const fOk=eF===0||totalF===eF; const mOk=eM===0||totalM===eM;
     return (
       <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif",paddingBottom:40}}>
-        <TopBar title={`${city} — Summary`} onBack={()=>{setHotelIdx(hs.length-1);setStep("room_counts");}} backLabel="Last Hotel"/>
+        <TopBar title={`${city} — Summary`} onBack={()=>{setHotelIdx(hs.length-1);setStep("room_counts");}} backLabel="Last Hotel" adminName={admin?.username}/>
         <div style={{maxWidth:640,margin:"0 auto",padding:"24px 16px"}}>
           <CityProg cities={trip.cities} cityIdx={cityIdx} isCityDone={isCityDone} onJump={i=>{setCityIdx(i);setHotelIdx(0);setStep("city_select");}}/>
           <Card style={{border:`1px solid ${col}44`}}>
