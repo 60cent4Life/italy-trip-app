@@ -51,6 +51,7 @@ export function AdminLogin({admin,onDone,onBack}){
   const [pass,setPass]=useState("");
   const [err,setErr]=useState("");
   const [loading,setLoading]=useState(false);
+  const [showPass,setShowPass]=useState(false);
 
   const submit=async()=>{
     setErr(""); setLoading(true);
@@ -73,7 +74,10 @@ export function AdminLogin({admin,onDone,onBack}){
           <div style={{color:TXT,fontSize:16,marginBottom:4,fontWeight:500}}>Admin Login</div>
           <div style={{color:DIM,fontSize:13,marginBottom:18}}>Welcome back, {admin.username}</div>
           <Lbl>Password</Lbl>
-          <input autoFocus style={{...inp,marginBottom:4}} type="password" placeholder="Enter your password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
+          <div style={{position:"relative",marginBottom:4}}>
+            <input autoFocus style={{...inp,paddingRight:44}} type={showPass?"text":"password"} placeholder="Enter your password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
+            <button onClick={()=>setShowPass(s=>!s)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:DIM,fontSize:16,lineHeight:1,padding:0}}>{showPass?"🙈":"👁️"}</button>
+          </div>
           <ErrBox msg={err}/>
           <button onClick={submit} disabled={loading} style={{...pbtn(RED,"#fff"),width:"100%",marginTop:14,padding:13,fontSize:15}}>{loading?"Signing in…":"Sign In →"}</button>
         </Card>
