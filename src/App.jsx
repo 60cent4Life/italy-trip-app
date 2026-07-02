@@ -84,10 +84,10 @@ export default function App(){
 
   if(screen==="trip_dashboard"&&trip) return (
     <>
-      <TripDashboard trip={trip}
+      <TripDashboard trip={trip} admin={admin}
         onBack={()=>setScreen("admin_dashboard")}
         onToggleLive={toggleLive}
-        onSetupRooms={()=>setScreen("setup_wizard")}
+        onSetupRooms={()=>{ if(admin?.role!=="owner"){ return; } setScreen("setup_wizard"); }}
         onViewAssignments={()=>setScreen("assignments")}
         onManualAssign={()=>setScreen("manual_assign")}
         onStudentAccounts={()=>setScreen("student_accounts")}
