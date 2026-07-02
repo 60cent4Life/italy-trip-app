@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 import { BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, Card, TopBar, OkBox, ErrBox, ConfirmModal } from "../shared.jsx";
 import { getRegistrationData, saveRegistrationData, clearRegistrationData } from "../lib/db.js";
 
-export function RegistrationData({trip,onBack}){
+export function RegistrationData({trip,admin,onBack}){
   const [drag,setDrag]=useState(false);
   const [loading,setLoading]=useState(false);
   const [msg,setMsg]=useState("");
@@ -45,13 +45,13 @@ export function RegistrationData({trip,onBack}){
     setRecords([]); setSelected(null); setShowClearConfirm(false); setMsg("✓ Registration data cleared.");
   };
 
-  if(records===null) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Registration Data" onBack={onBack} backLabel="Trip Dashboard"/></div>;
+  if(records===null) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Registration Data" onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}/></div>;
 
   const filtered = records.filter(r=>!search||r._displayName.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>a._displayName.localeCompare(b._displayName));
 
   return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif",paddingBottom:40}}>
-      <TopBar title="Registration Data" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard"/>
+      <TopBar title="Registration Data" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}/>
       {records.length===0 ? (
         <div style={{maxWidth:600,margin:"0 auto",padding:"28px 16px"}}>
           <Card>
