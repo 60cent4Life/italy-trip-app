@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { CITY_CLR, BG, CARD, BORD, DIM, TXT, GRN, RED, pbtn, TopBar, Spinner, flattenRooms, occupiedMap } from "../shared.jsx";
 import { getRoster, getSelections, getAllStudentAccounts } from "../lib/db.js";
 
-export function TripDashboard({trip,onBack,onToggleLive,onSetupRooms,onViewAssignments,onManualAssign,onGoHome,onEnterAsStudent,onStudentAccounts,onRegistrationData}){
+export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onViewAssignments,onManualAssign,onGoHome,onEnterAsStudent,onStudentAccounts,onRegistrationData}){
   const [roster,setRoster]=useState([]);
   const [selections,setSelections]=useState({});
   const [accountCount,setAccountCount]=useState(0);
@@ -60,18 +60,21 @@ export function TripDashboard({trip,onBack,onToggleLive,onSetupRooms,onViewAssig
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
           {[
-            {icon:"🏨",label:"Configure Hotels & Rooms",sub:"Upload roster & set up hotels",onClick:onSetupRooms},
+            {icon:"🏨",label:"Configure Hotels & Rooms",sub:"Upload roster & set up hotels",onClick:onSetupRooms,ownerOnly:true},
             {icon:"📋",label:"View Assignments",sub:"See who's in each room",onClick:onViewAssignments},
             {icon:"✏️",label:"Manually Assign / Move Students",sub:"Place or move a student between rooms",onClick:onManualAssign},
             {icon:"👤",label:"Student Accounts",sub:"See who has registered & reset passwords",onClick:onStudentAccounts},
             {icon:"📋",label:"Registration Data",sub:"View or upload the organizer's original application data",onClick:onRegistrationData},
-          ].map(({icon,label,sub,onClick})=>(
-            <button key={label} onClick={onClick} style={{background:CARD,border:`1px solid ${BORD}`,borderRadius:10,padding:"18px 16px",cursor:"pointer",fontFamily:"'Georgia',serif",textAlign:"left"}}>
-              <div style={{fontSize:28,marginBottom:8}}>{icon}</div>
-              <div style={{color:TXT,fontSize:14,fontWeight:600,marginBottom:3}}>{label}</div>
-              <div style={{color:DIM,fontSize:12}}>{sub}</div>
-            </button>
-          ))}
+          ].map(({icon,label,sub,onClick,ownerOnly})=>{
+            const locked = ownerOnly && admin?.role!=="owner";
+            return (
+              <button key={label} onClick={locked?undefined:onClick} disabled={locked} style={{background:CARD,border:`1px solid ${BORD}`,borderRadius:10,padding:"18px 16px",cursor:locked?"not-allowed":"pointer",fontFamily:"'Georgia',serif",textAlign:"left",opacity:locked?0.5:1}}>
+                <div style={{fontSize:28,marginBottom:8}}>{locked?"🔒":icon}</div>
+                <div style={{color:TXT,fontSize:14,fontWeight:600,marginBottom:3}}>{label}</div>
+                <div style={{color:DIM,fontSize:12}}>{locked?"Owner only":sub}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
