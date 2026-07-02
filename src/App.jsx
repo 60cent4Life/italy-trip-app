@@ -37,6 +37,7 @@ export default function App(){
 
   const toggleLive = async () => {
     if(!trip) return;
+    if(admin?.role!=="owner") return;
     if(!trip.is_live){
       setModal({
         title:"Open Student Portal?",
