@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ALL_CITIES, CITY_DATES_DEFAULT, CITY_CLR, BG, DIM, TXT, RED, inp, Card, Lbl, ErrBox, TopBar, NavRow } from "../shared.jsx";
 import { createTrip } from "../lib/db.js";
 
-export function CreateTrip({onDone,onBack}){
+export function CreateTrip({admin,onDone,onBack}){
   const [name,setName]=useState("");
   const [year,setYear]=useState(new Date().getFullYear());
   const [cities,setCities]=useState([...ALL_CITIES]);
@@ -21,7 +21,7 @@ export function CreateTrip({onDone,onBack}){
 
   return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif"}}>
-      <TopBar title="Create New Trip" onBack={onBack} backLabel="Dashboard"/>
+      <TopBar title="Create New Trip" onBack={onBack} backLabel="Dashboard" adminName={admin?.username}/>
       <div style={{maxWidth:520,margin:"0 auto",padding:"28px 16px"}}>
         <Card>
           <div style={{color:TXT,fontSize:16,marginBottom:20,fontWeight:500}}>Trip Details</div>
