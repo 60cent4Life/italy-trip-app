@@ -26,7 +26,7 @@ export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onVie
 
   return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif",paddingBottom:40}}>
-      <TopBar title={trip.name} sub={`${trip.year}`} onBack={onBack} backLabel="All Trips"
+      <TopBar title={trip.name} sub={`${trip.year}`} onBack={onBack} backLabel="All Trips" adminName={admin?.username}
         right={<div style={{display:"flex",gap:8}}>
           <button onClick={onGoHome} style={{...pbtn("transparent",DIM,"#30363D"),padding:"5px 12px",fontSize:12}}>🏠 Home</button>
           <button onClick={onEnterAsStudent} disabled={!trip.is_live} style={{...pbtn(trip.is_live?"#1C2B3A":CARD,trip.is_live?"#79C0FF":DIM,trip.is_live?"#79C0FF":"#30363D"),padding:"5px 12px",fontSize:12,cursor:trip.is_live?"pointer":"not-allowed"}}>🎒 Enter as Student</button>
