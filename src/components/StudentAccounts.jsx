@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, Lbl, TopBar, Spinner, ConfirmModal } from "../shared.jsx";
 import { simpleHash, getRoster, getAllStudentAccounts, resetStudentPassword, getSelections } from "../lib/db.js";
 
-export function StudentAccounts({trip,onBack}){
+export function StudentAccounts({trip,admin,onBack}){
   const [roster,setRoster]=useState([]);
   const [accounts,setAccounts]=useState([]);
   const [selections,setSelections]=useState({});
@@ -18,7 +18,7 @@ export function StudentAccounts({trip,onBack}){
       .then(([r,a,s])=>{ setRoster(r); setAccounts(a); setSelections(s); setLoading(false); });
   },[trip.id]);
 
-  if(loading) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Student Accounts" onBack={onBack} backLabel="Trip Dashboard"/><Spinner label="Loading…"/></div>;
+  if(loading) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Student Accounts" onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}/><Spinner label="Loading…"/></div>;
 
   const enriched = roster.map(s=>{
     const acct = accounts.find(a=>a.name===s.name);
@@ -38,7 +38,7 @@ export function StudentAccounts({trip,onBack}){
 
   return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif",paddingBottom:60}}>
-      <TopBar title="Student Accounts" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard"/>
+      <TopBar title="Student Accounts" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}/>
       <div style={{maxWidth:900,margin:"0 auto",padding:"20px 16px"}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name…" style={{...inp,marginBottom:16,fontSize:14,padding:"9px 13px"}}/>
         {resetMsg&&<div style={{padding:"12px 16px",background:"#162318",border:`1px solid ${GRN}`,borderRadius:8,color:GRN,fontSize:13,marginBottom:16}}>{resetMsg}</div>}
