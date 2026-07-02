@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { CITY_CLR, BG, CARD, BORD, DIM, TXT, GRN, RED, pbtn, TopBar, Spinner, flattenRooms, occupiedMap } from "../shared.jsx";
 import { getRoster, getSelections, getAllStudentAccounts } from "../lib/db.js";
 
-export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onViewAssignments,onManualAssign,onGoHome,onEnterAsStudent,onStudentAccounts,onRegistrationData}){
+export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onViewAssignments,onManualAssign,onGoHome,onEnterAsStudent,onStudentAccounts,onRegistrationData,onStudentInfo}){
   const [roster,setRoster]=useState([]);
   const [selections,setSelections]=useState({});
   const [accountCount,setAccountCount]=useState(0);
@@ -61,6 +61,7 @@ export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onVie
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
           {[
             {icon:"🏨",label:"Configure Hotels & Rooms",sub:"Upload roster & set up hotels",onClick:onSetupRooms,ownerOnly:true},
+            {icon:"🛂",label:"Student Info",sub:"Passport #, DOB, allergies & email at a glance",onClick:onStudentInfo},
             {icon:"📋",label:"View Assignments",sub:"See who's in each room",onClick:onViewAssignments},
             {icon:"✏️",label:"Manually Assign / Move Students",sub:"Place or move a student between rooms",onClick:onManualAssign},
             {icon:"👤",label:"Student Accounts",sub:"See who has registered & reset passwords",onClick:onStudentAccounts},
