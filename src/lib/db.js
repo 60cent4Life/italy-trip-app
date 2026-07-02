@@ -11,23 +11,58 @@ export function simpleHash(str) {
   return h.toString(36);
 }
 
-// ── ADMIN ACCOUNT ─────────────────────────────────────────────────────────
-export async function getAdmin() {
-  const { data, error } = await supabase.from('admin_account').select('*').limit(1).single();
-  if (error && error.code !== 'PGRST116') console.error(error); // PGRST116 = no rows, expected on first run
+// ── ADMIN ACCOUNTS ────────────────────────────────────────────────────────
+// Supports multiple admins now: one 'owner' (can't be deleted, can manage
+// other admins) plus any number of regular 'admin' accounts.
+
+// Used by the landing page to decide: show "create the first owner account"
+// vs "log in" when the Admin button is clicked.
+export async function getAnyAdminExists() {
+  const { data, error } = await supabase.from('admin_account').select('id').limit(1);
+  if (error) throw error;
+  return (data || []).length > 0;
+}
+
+export async function getAdminByEmail(email) {
+  const { data, error } = await supabase.from('admin_account')
+    .select('*').eq('email', email.trim().toLowerCase()).limit(1).single();
+  if (error && error.code !== 'PGRST116') console.error(error); // PGRST116 = no rows, expected
   return data || null;
 }
 
-export async function createAdmin({ username, email, passHash }) {
+export async function getAllAdmins() {
   const { data, error } = await supabase.from('admin_account')
-    .insert({ username, email, pass_hash: passHash }).select().single();
+    .select('*').order('role', { ascending: true }).order('created_at', { ascending: true });
   if (error) throw error;
+  return data || [];
+}
+
+// role defaults to 'admin' — the very first account (created via AdminRegister)
+// explicitly passes role:'owner'. Only ever one owner should be created that way.
+export async function createAdmin({ username, email, passHash, role = 'admin' }) {
+  const { data, error } = await supabase.from('admin_account')
+    .insert({ username, email: email.trim().toLowerCase(), pass_hash: passHash, role }).select().single();
+  if (error) {
+    if (error.code === '23505') throw new Error('An admin account with this email already exists.');
+    throw error;
+  }
   return data;
 }
 
 export async function updateAdminPassword(adminId, newPassHash) {
   const { error } = await supabase.from('admin_account')
     .update({ pass_hash: newPassHash }).eq('id', adminId);
+  if (error) throw error;
+}
+
+// Owner accounts can never be deleted — enforced here in addition to the
+// "Remove" button simply not being shown for the owner in the dashboard UI.
+export async function deleteAdmin(adminId) {
+  const { data: target, error: fetchErr } = await supabase.from('admin_account')
+    .select('role').eq('id', adminId).single();
+  if (fetchErr) throw fetchErr;
+  if (target.role === 'owner') throw new Error('The owner account cannot be removed.');
+  const { error } = await supabase.from('admin_account').delete().eq('id', adminId);
   if (error) throw error;
 }
 
