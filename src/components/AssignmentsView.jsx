@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 import { SLOTS, CITY_CLR, BG, CARD, BORD, DIM, TXT, RED, GRN, pbtn, TopBar, Spinner, flattenRooms, occupiedMap, getCityDateLabel } from "../shared.jsx";
 import { getRoster, getSelections } from "../lib/db.js";
 
-export function AssignmentsView({trip,onBack}){
+export function AssignmentsView({trip,admin,onBack}){
   const [roster,setRoster]=useState([]);
   const [selections,setSelections]=useState({});
   const [loading,setLoading]=useState(true);
@@ -13,7 +13,7 @@ export function AssignmentsView({trip,onBack}){
     Promise.all([getRoster(trip.id), getSelections(trip.id)]).then(([r,s])=>{ setRoster(r); setSelections(s); setLoading(false); });
   },[trip.id]);
 
-  if(loading) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Room Assignments" onBack={onBack} backLabel="Trip Dashboard"/><Spinner label="Loading…"/></div>;
+  if(loading) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Room Assignments" onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}/><Spinner label="Loading…"/></div>;
 
   const rooms = flattenRooms(trip.setup_data, trip.cities);
   const occ = occupiedMap(selections, trip.cities);
@@ -61,7 +61,7 @@ export function AssignmentsView({trip,onBack}){
 
   return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif",paddingBottom:60}}>
-      <TopBar title="Room Assignments" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard"
+      <TopBar title="Room Assignments" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}
         right={<div style={{display:"flex",gap:8}}>
           <button onClick={exportExcel} style={{...pbtn("#162318",GRN,GRN),padding:"6px 12px",fontSize:12}}>↓ Student Data</button>
           <button onClick={exportOrganizerExcel} style={{...pbtn("#1C2B3A","#79C0FF","#79C0FF"),padding:"6px 12px",fontSize:12}}>↓ Organizer Sheets</button>
