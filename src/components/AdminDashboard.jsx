@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, Card, Lbl, TopBar, Spinner } from "../shared.jsx";
-import { simpleHash, getAllTrips, getAdmin, updateAdminPassword } from "../lib/db.js";
+import { simpleHash, getAllTrips, getAdminByEmail, updateAdminPassword, getAllAdmins, createAdmin, deleteAdmin } from "../lib/db.js";
 
 export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
   const [trips,setTrips]=useState([]);
@@ -12,14 +12,25 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
   const [showCur,setShowCur]=useState(false);
   const [showNew,setShowNew]=useState(false);
 
+  const [admins,setAdmins]=useState([]);
+  const [showAdminModal,setShowAdminModal]=useState(false);
+  const [newAdminForm,setNewAdminForm]=useState({username:"",email:"",pass:""});
+  const [adminErr,setAdminErr]=useState("");
+  const [adminLoading,setAdminLoading]=useState(false);
+  const [confirmDeleteId,setConfirmDeleteId]=useState(null);
+
   useEffect(()=>{
     getAllTrips().then(t=>{ setTrips(t); setLoading(false); }).catch(()=>setLoading(false));
   },[]);
 
+  useEffect(()=>{
+    if(admin.role==="owner") getAllAdmins().then(setAdmins).catch(()=>{});
+  },[admin.role]);
+
   const handleChangePassword=async()=>{
     setPwErr(""); setPwOk("");
     if(!pwForm.current){setPwErr("Enter your current password.");return;}
-    const fresh = await getAdmin();
+    const fresh = await getAdminByEmail(admin.email);
     if(simpleHash(pwForm.current)!==fresh.pass_hash){setPwErr("Current password is incorrect.");return;}
     if(pwForm.newP.length<6){setPwErr("New password must be at least 6 characters.");return;}
     if(pwForm.newP!==pwForm.confirm){setPwErr("New passwords don't match.");return;}
@@ -27,6 +38,28 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
     setPwOk("✓ Password changed successfully.");
     setPwForm({current:"",newP:"",confirm:""});
     setTimeout(()=>{ setShowPwModal(false); setPwOk(""); },2000);
+  };
+
+  const handleAddAdmin=async()=>{
+    setAdminErr("");
+    if(!newAdminForm.username.trim()||!newAdminForm.email.trim()||!newAdminForm.pass){setAdminErr("All fields required.");return;}
+    if(newAdminForm.pass.length<6){setAdminErr("Password must be at least 6 characters.");return;}
+    setAdminLoading(true);
+    try{
+      await createAdmin({ username:newAdminForm.username.trim(), email:newAdminForm.email.trim(), passHash:simpleHash(newAdminForm.pass), role:"admin" });
+      setAdmins(await getAllAdmins());
+      setShowAdminModal(false);
+      setNewAdminForm({username:"",email:"",pass:""});
+    }catch(e){ setAdminErr(e.message || "Could not create admin account."); }
+    setAdminLoading(false);
+  };
+
+  const handleDeleteAdmin=async(id)=>{
+    try{
+      await deleteAdmin(id);
+      setAdmins(await getAllAdmins());
+    }catch(e){ alert(e.message || "Could not remove admin."); }
+    setConfirmDeleteId(null);
   };
 
   const eyeBtn=(show,toggle)=>(
@@ -37,7 +70,7 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif"}}>
       <TopBar title="Admin Dashboard" right={
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <span style={{color:DIM,fontSize:13}}>{admin.username}</span>
+          <span style={{color:DIM,fontSize:13}}>{admin.username}{admin.role==="owner"&&<span style={{color:"#FFD700",marginLeft:6}}>★ Owner</span>}</span>
           <button onClick={()=>{setShowPwModal(true);setPwErr("");setPwOk("");setPwForm({current:"",newP:"",confirm:""});}} style={{...pbtn("transparent","#79C0FF","#79C0FF"),padding:"5px 12px",fontSize:12}}>🔑 Change Password</button>
           <button onClick={onLogout} style={{...pbtn("transparent",DIM,"#30363D"),padding:"5px 12px",fontSize:12}}>Sign Out</button>
         </div>
@@ -64,7 +97,55 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
         </div>
       )}
 
+      {showAdminModal&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:24,fontFamily:"'Georgia',serif"}}>
+          <div style={{background:"#1C2128",border:"1px solid #30363D",borderRadius:12,padding:28,maxWidth:400,width:"100%"}}>
+            <div style={{color:TXT,fontSize:17,fontWeight:600,marginBottom:4}}>Add Admin Account</div>
+            <div style={{color:DIM,fontSize:13,marginBottom:20}}>Give someone else full admin access. You can remove them again at any time.</div>
+            <Lbl>Name</Lbl>
+            <input autoFocus style={{...inp,marginBottom:12}} placeholder="e.g. Trip Organizer" value={newAdminForm.username} onChange={e=>setNewAdminForm(f=>({...f,username:e.target.value}))}/>
+            <Lbl>Email</Lbl>
+            <input style={{...inp,marginBottom:12}} type="email" placeholder="organizer@example.com" value={newAdminForm.email} onChange={e=>setNewAdminForm(f=>({...f,email:e.target.value}))}/>
+            <Lbl>Temporary Password</Lbl>
+            <input style={{...inp,marginBottom:6}} type="text" placeholder="Min. 6 characters — share this with them" value={newAdminForm.pass} onChange={e=>setNewAdminForm(f=>({...f,pass:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&handleAddAdmin()}/>
+            {adminErr&&<div style={{padding:"9px 12px",background:"#3A1A1A",borderRadius:6,color:"#FF7B72",fontSize:13,marginTop:8}}>{adminErr}</div>}
+            <div style={{display:"flex",gap:10,marginTop:16}}>
+              <button onClick={()=>setShowAdminModal(false)} style={{flex:1,...pbtn("transparent",DIM,"#30363D"),padding:11}}>Cancel</button>
+              <button onClick={handleAddAdmin} disabled={adminLoading} style={{flex:2,...pbtn("#2471A3","#fff"),border:"none",padding:11,fontSize:14}}>{adminLoading?"Creating…":"+ Create Admin"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{maxWidth:760,margin:"0 auto",padding:"28px 16px"}}>
+        {admin.role==="owner"&&(
+          <div style={{marginBottom:28}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div style={{color:TXT,fontSize:16}}>Admin Accounts</div>
+              <button onClick={()=>{setShowAdminModal(true);setAdminErr("");}} style={{...pbtn("transparent","#79C0FF","#79C0FF"),padding:"6px 14px",fontSize:12}}>+ Add Admin</button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {admins.map(a=>(
+                <div key={a.id} style={{background:CARD,border:`1px solid ${BORD}`,borderRadius:8,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div>
+                    <div style={{color:TXT,fontSize:14}}>{a.username}{a.role==="owner"&&<span style={{color:"#FFD700",fontSize:11,marginLeft:6}}>★ Owner</span>}</div>
+                    <div style={{color:DIM,fontSize:12}}>{a.email}</div>
+                  </div>
+                  {a.role!=="owner"&&(
+                    confirmDeleteId===a.id?(
+                      <div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>handleDeleteAdmin(a.id)} style={{...pbtn(RED,"#fff"),padding:"5px 10px",fontSize:12}}>Confirm Remove</button>
+                        <button onClick={()=>setConfirmDeleteId(null)} style={{...pbtn("transparent",DIM,"#30363D"),padding:"5px 10px",fontSize:12}}>Cancel</button>
+                      </div>
+                    ):(
+                      <button onClick={()=>setConfirmDeleteId(a.id)} style={{...pbtn("transparent","#FF7B72","#FF7B72"),padding:"5px 10px",fontSize:12}}>Remove</button>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
           <div style={{color:TXT,fontSize:18}}>Your Trips</div>
           <button onClick={onNewTrip} style={{...pbtn(RED,"#fff"),padding:"10px 22px"}}>+ Create New Trip</button>
