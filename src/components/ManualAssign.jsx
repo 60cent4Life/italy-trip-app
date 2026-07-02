@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { SLOTS, CITY_CLR, GENDER_CLR, BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, TopBar, Spinner, flattenRooms, occupiedMap } from "../shared.jsx";
 import { getRoster, getSelections, claimSlot, moveStudentToSlot, releaseStudentCityPick, subscribeToRoomChanges } from "../lib/db.js";
 
-export function ManualAssign({trip,onBack,onSaved}){
+export function ManualAssign({trip,admin,onBack,onSaved}){
   const [roster,setRoster]=useState([]);
   const [selections,setSelections]=useState({});
   const [loading,setLoading]=useState(true);
@@ -23,7 +23,7 @@ export function ManualAssign({trip,onBack,onSaved}){
     return () => { if(unsub) unsub(); };
   },[trip.id]);
 
-  if(loading) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Manual Room Assignment" onBack={onBack} backLabel="Trip Dashboard"/><Spinner label="Loading…"/></div>;
+  if(loading) return <div style={{minHeight:"100vh",background:BG}}><TopBar title="Manual Room Assignment" onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}/><Spinner label="Loading…"/></div>;
 
   const rooms = flattenRooms(trip.setup_data, trip.cities);
   const occ = occupiedMap(selections, trip.cities);
@@ -68,7 +68,7 @@ export function ManualAssign({trip,onBack,onSaved}){
 
   return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia',serif",display:"flex",flexDirection:"column"}}>
-      <TopBar title="Manual Room Assignment" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard"/>
+      <TopBar title="Manual Room Assignment" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}/>
       <div style={{position:"sticky",top:0,zIndex:100,background:BG,borderBottom:`1px solid ${BORD}`}}>
         <div style={{maxWidth:1400,margin:"0 auto",padding:"10px 20px"}}>
           <div style={{display:"flex",gap:12,alignItems:"flex-start",flexWrap:"wrap",marginBottom:8}}>
