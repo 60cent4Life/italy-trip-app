@@ -77,10 +77,10 @@ export default function App(){
 
   if(screen==="admin_dashboard") return <AdminDashboard admin={admin}
     onLogout={()=>setScreen("landing")}
-    onNewTrip={()=>setScreen("create_trip")}
+    onNewTrip={()=>{ if(admin?.role!=="owner"){ return; } setScreen("create_trip"); }}
     onOpenTrip={t=>{ setTrip(t); setScreen("trip_dashboard"); }}/>;
 
-  if(screen==="create_trip") return <CreateTrip onDone={t=>{ setTrip(t); setScreen("trip_dashboard"); }} onBack={()=>setScreen("admin_dashboard")}/>;
+  if(screen==="create_trip") return <CreateTrip admin={admin} onDone={t=>{ setTrip(t); setScreen("trip_dashboard"); }} onBack={()=>setScreen("admin_dashboard")}/>;
 
   if(screen==="trip_dashboard"&&trip) return (
     <>
@@ -98,15 +98,15 @@ export default function App(){
     </>
   );
 
-  if(screen==="setup_wizard"&&trip) return <SetupWizard trip={trip}
+  if(screen==="setup_wizard"&&trip) return <SetupWizard trip={trip} admin={admin}
     onDone={async()=>{ const refreshed=(await getAllTrips()).find(t=>t.id===trip.id); setTrip(refreshed||trip); setScreen("trip_dashboard"); }}
     onBack={()=>setScreen("trip_dashboard")}
     onUpdateTrip={(updated)=>setTrip(updated)}/>;
 
-  if(screen==="assignments"&&trip) return <AssignmentsView trip={trip} onBack={()=>setScreen("trip_dashboard")}/>;
-  if(screen==="manual_assign"&&trip) return <ManualAssign trip={trip} onBack={()=>setScreen("trip_dashboard")} onSaved={()=>{}}/>;
-  if(screen==="student_accounts"&&trip) return <StudentAccounts trip={trip} onBack={()=>setScreen("trip_dashboard")}/>;
-  if(screen==="registration_data"&&trip) return <RegistrationData trip={trip} onBack={()=>setScreen("trip_dashboard")}/>;
+  if(screen==="assignments"&&trip) return <AssignmentsView trip={trip} admin={admin} onBack={()=>setScreen("trip_dashboard")}/>;
+  if(screen==="manual_assign"&&trip) return <ManualAssign trip={trip} admin={admin} onBack={()=>setScreen("trip_dashboard")} onSaved={()=>{}}/>;
+  if(screen==="student_accounts"&&trip) return <StudentAccounts trip={trip} admin={admin} onBack={()=>setScreen("trip_dashboard")}/>;
+  if(screen==="registration_data"&&trip) return <RegistrationData trip={trip} admin={admin} onBack={()=>setScreen("trip_dashboard")}/>;
 
   // ── STUDENT SIDE ───────────────────────────────────────────────────────────
   if(screen==="student_auth"){
