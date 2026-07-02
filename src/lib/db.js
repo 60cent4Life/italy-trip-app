@@ -86,8 +86,15 @@ export async function createTrip({ name, year, cities }) {
   return data;
 }
 
+// Deletes a trip and everything tied to it (roster, student accounts, room
+// selections, registration data) — the database's ON DELETE CASCADE rules
+// handle cleaning up the related tables automatically.
+export async function deleteTrip(tripId) {
+  const { error } = await supabase.from('trips').delete().eq('id', tripId);
+  if (error) throw error;
+}
+
 export async function setTripLive(tripId, isLive) {
-  // Atomically: if opening this trip, close all others first
   if (isLive) {
     await supabase.from('trips').update({ is_live: false }).neq('id', tripId);
   }
