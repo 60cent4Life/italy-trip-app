@@ -1,4 +1,4 @@
-# Italy Trip Portal — Deployable App
+# Italy Trip Portal — Deployable App.
 
 This folder contains your complete, real, deployable web app — converted from
 the chat-only version to use a real shared database (Supabase) so multiple
