@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { BG, ConfirmModal, GRN, RED } from "./shared.jsx";
-import { getAdmin, getAllTrips, getLiveTrip, setTripLive, getStudentByEmail } from "./lib/db.js";
+import { getAnyAdminExists, getAllTrips, getLiveTrip, setTripLive, getStudentByEmail } from "./lib/db.js";
 
-import { AdminLogin, AdminRegister, StudentLogin, StudentRegister } from "./components/Auth.jsx";
+import { AdminLogin, AdminRegister, AdminEmailLogin, StudentLogin, StudentRegister } from "./components/Auth.jsx";
 import { Landing } from "./components/Landing.jsx";
 import { AdminDashboard } from "./components/AdminDashboard.jsx";
 import { CreateTrip } from "./components/CreateTrip.jsx";
@@ -65,14 +65,15 @@ export default function App(){
   if(screen==="landing") return (
     <>
       <Landing isLive={isLive} liveTrip={liveTrip}
-        onAdmin={async()=>{ const a=await getAdmin(); if(a){ setAdmin(a); setScreen("admin_login"); } else setScreen("admin_register"); }}
+        onAdmin={async()=>{ const exists=await getAnyAdminExists(); setScreen(exists?"admin_email_login":"admin_register"); }}
         onStudent={()=>{ if(!isLive){ alert("The student portal is not yet open."); return; } setScreen("student_auth"); }}/>
       {modal&&<ConfirmModal {...modal} onCancel={()=>setModal(null)}/>}
     </>
   );
 
   if(screen==="admin_register") return <AdminRegister onDone={a=>{ setAdmin(a); setScreen("admin_dashboard"); }}/>;
-  if(screen==="admin_login") return <AdminLogin admin={admin} onDone={a=>{ setAdmin(a); setScreen("admin_dashboard"); }} onBack={()=>setScreen("landing")}/>;
+  if(screen==="admin_email_login") return <AdminEmailLogin onFound={a=>{ setAdmin(a); setScreen("admin_login"); }} onBack={()=>setScreen("landing")}/>;
+  if(screen==="admin_login") return <AdminLogin admin={admin} onDone={a=>{ setAdmin(a); setScreen("admin_dashboard"); }} onBack={()=>setScreen("admin_email_login")}/>;
 
   if(screen==="admin_dashboard") return <AdminDashboard admin={admin}
     onLogout={()=>setScreen("landing")}
@@ -140,7 +141,7 @@ export default function App(){
   return (
     <>
       <Landing isLive={isLive} liveTrip={liveTrip}
-        onAdmin={async()=>{ const a=await getAdmin(); if(a){ setAdmin(a); setScreen("admin_login"); } else setScreen("admin_register"); }}
+        onAdmin={async()=>{ const exists=await getAnyAdminExists(); setScreen(exists?"admin_email_login":"admin_register"); }}
         onStudent={()=>setScreen("student_auth")}/>
       {modal&&<ConfirmModal {...modal} onCancel={()=>setModal(null)}/>}
     </>
