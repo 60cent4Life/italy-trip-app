@@ -148,14 +148,14 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
         )}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
           <div style={{color:TXT,fontSize:18}}>Your Trips</div>
-          <button onClick={onNewTrip} style={{...pbtn(RED,"#fff"),padding:"10px 22px"}}>+ Create New Trip</button>
+          {admin.role==="owner"&&<button onClick={onNewTrip} style={{...pbtn(RED,"#fff"),padding:"10px 22px"}}>+ Create New Trip</button>}
         </div>
         {loading ? <Spinner label="Loading your trips…"/> : trips.length===0?(
           <Card style={{textAlign:"center",padding:48}}>
             <div style={{fontSize:36,marginBottom:12}}>✈️</div>
             <div style={{color:TXT,fontSize:18,marginBottom:6}}>No trips yet</div>
-            <div style={{color:DIM,fontSize:14,marginBottom:20}}>Create your first trip to get started.</div>
-            <button onClick={onNewTrip} style={{...pbtn(RED,"#fff"),padding:"11px 28px"}}>Create New Trip</button>
+            <div style={{color:DIM,fontSize:14,marginBottom:20}}>{admin.role==="owner"?"Create your first trip to get started.":"The owner hasn't created a trip yet."}</div>
+            {admin.role==="owner"&&<button onClick={onNewTrip} style={{...pbtn(RED,"#fff"),padding:"11px 28px"}}>Create New Trip</button>}
           </Card>
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
