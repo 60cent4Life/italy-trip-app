@@ -85,7 +85,7 @@ export function ConfirmModal({title,message,confirmLabel,confirmColor,onConfirm,
 
 export function STitle({children,color}){ return <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}><div style={{width:3,height:20,background:color||RED,borderRadius:2}}/><span style={{color:color||RED,fontSize:13,letterSpacing:"0.12em",textTransform:"uppercase"}}>{children}</span></div>; }
 
-export function TopBar({title,sub,onBack,backLabel,right}){
+export function TopBar({title,sub,onBack,backLabel,right,adminName}){
   return (
     <div style={{background:CARD,borderBottom:`1px solid ${BORD}`,padding:"12px 20px",display:"flex",alignItems:"center",gap:12}}>
       {onBack&&<button onClick={onBack} style={{...pbtn("transparent",DIM,"#30363D"),padding:"5px 12px",fontSize:13,flexShrink:0}}>← {backLabel||"Back"}</button>}
@@ -93,7 +93,10 @@ export function TopBar({title,sub,onBack,backLabel,right}){
         <div style={{fontSize:10,letterSpacing:"0.2em",color:DIM,textTransform:"uppercase"}}>NCDSB · Hamilton Dante · Italy Trip</div>
         <div style={{fontSize:17,color:TXT}}>{title}{sub&&<span style={{color:DIM,fontSize:13,marginLeft:8}}>{sub}</span>}</div>
       </div>
-      {right}
+      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+        {adminName&&<span style={{color:DIM,fontSize:13}}>{adminName}</span>}
+        {right}
+      </div>
     </div>
   );
 }
