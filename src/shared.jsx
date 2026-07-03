@@ -5,7 +5,7 @@
 import { useState } from "react";
 
 export const ALL_CITIES = ["Rome","Sulmona","Chieti","Florence","Venice"];
-export const CITY_DATES_DEFAULT = { Rome:"July 04–07", Sulmona:"July 07–10", Chieti:"July 10–13", Florence:"July 13–16", Venice:"July 16–19" };
+export const CITY_DATES_DEFAULT = { Rome:"July 04–07", Sulmona:"July 07–15", Chieti:"July 15–19", Florence:"July 19–22", Venice:"July 22–25" };
 export const ROOM_TYPES = ["Quintuple","Quad","Triple","Double","Single"];
 export const ROOM_SIZES = { Single:1, Double:2, Triple:3, Quad:4, Quintuple:5 };
 export const SLOTS = ["A","B","C","D","E"];
