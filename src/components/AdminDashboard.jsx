@@ -132,6 +132,18 @@ export function AdminDashboard({admin,onLogout,onNewTrip,onOpenTrip}){
 
       <div style={{maxWidth:760,margin:"0 auto",padding:"28px 16px"}}>
         {admin.role==="owner"&&(
+          <div style={{background:"#1C2B1A",border:"1px solid #F0B429",borderRadius:8,padding:"12px 16px",marginBottom:20,display:"flex",gap:10,alignItems:"flex-start"}}>
+            <div style={{fontSize:18}}>⚠️</div>
+            <div style={{flex:1}}>
+              <div style={{color:"#F0B429",fontSize:13,fontWeight:600,marginBottom:2}}>Before opening the portal each year</div>
+              <div style={{color:DIM,fontSize:12,lineHeight:1.5}}>
+                This app's free database (Supabase) automatically pauses itself after a week with no activity — since this app is only used a few days a year, that's likely to happen between trips. A few days before students need to log in, visit{" "}
+                <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" style={{color:"#79C0FF"}}>supabase.com/dashboard</a>{" "}and click "Resume" if your project shows as paused — then test logging in here yourself once to confirm everything's working.
+              </div>
+            </div>
+          </div>
+        )}
+        {admin.role==="owner"&&(
           <div style={{marginBottom:28}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{color:TXT,fontSize:16}}>Admin Accounts</div>
