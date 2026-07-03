@@ -13,6 +13,7 @@ import { AssignmentsView } from "./components/AssignmentsView.jsx";
 import { ManualAssign } from "./components/ManualAssign.jsx";
 import { StudentAccounts } from "./components/StudentAccounts.jsx";
 import { StudentInfo } from "./components/StudentInfo.jsx";
+import { BulkImportAssignments } from "./components/BulkImportAssignments.jsx";
 import { RegistrationData } from "./components/RegistrationData.jsx";
 
 export default function App(){
@@ -95,6 +96,7 @@ export default function App(){
         onStudentAccounts={()=>setScreen("student_accounts")}
         onRegistrationData={()=>setScreen("registration_data")}
         onStudentInfo={()=>setScreen("student_info")}
+        onBulkImport={()=>{ if(admin?.role!=="owner"){ return; } setScreen("bulk_import"); }}
         onGoHome={()=>setScreen("landing")}
         onEnterAsStudent={()=>{ if(!trip.is_live){ setModal({title:"Portal Not Open",message:"Open the portal first.",confirmLabel:"OK",confirmColor:RED,onConfirm:()=>setModal(null)}); return; } setScreen("student_auth"); }}/>
       {modal&&<ConfirmModal {...modal} onCancel={()=>setModal(null)}/>}
@@ -111,6 +113,7 @@ export default function App(){
   if(screen==="student_accounts"&&trip) return <StudentAccounts trip={trip} admin={admin} onBack={()=>setScreen("trip_dashboard")}/>;
   if(screen==="registration_data"&&trip) return <RegistrationData trip={trip} admin={admin} onBack={()=>setScreen("trip_dashboard")}/>;
   if(screen==="student_info"&&trip) return <StudentInfo trip={trip} admin={admin} onBack={()=>setScreen("trip_dashboard")}/>;
+  if(screen==="bulk_import"&&trip) return <BulkImportAssignments trip={trip} admin={admin} onBack={()=>setScreen("trip_dashboard")}/>;
 
   // ── STUDENT SIDE ───────────────────────────────────────────────────────────
   if(screen==="student_auth"){
