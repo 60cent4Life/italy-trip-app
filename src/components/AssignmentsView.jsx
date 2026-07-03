@@ -66,7 +66,7 @@ export function AssignmentsView({trip,admin,onBack}){
         pageSetup: { orientation:"landscape", fitToPage:true, fitToWidth:1, fitToHeight:0, margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} },
       });
       ws.columns = [
-        {width:6},{width:14},{width:9},{width:22},{width:22},{width:22},{width:22},{width:22},
+        {width:6},{width:14},{width:10},{width:21.36},{width:21.36},{width:21.36},{width:21.36},{width:21.36},
       ];
 
       const titleRow = ws.addRow([city.toUpperCase()]);
@@ -89,7 +89,7 @@ export function AssignmentsView({trip,admin,onBack}){
         hotelRow.getCell(1).font = {size:12,bold:true,color:{argb:"FFFFFFFF"}};
         hotelRow.getCell(1).alignment = {horizontal:"left",vertical:"middle"};
 
-        const headerRow = ws.addRow(["#","Type","Person A","Person B","Person C","Person D","Person E",""]);
+        const headerRow = ws.addRow(["#","Type","Gender","Person A","Person B","Person C","Person D","Person E"]);
         headerRow.height = 18;
         headerRow.eachCell({includeEmpty:true},cell=>{
           cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FF2D3748"}};
@@ -101,7 +101,7 @@ export function AssignmentsView({trip,admin,onBack}){
         hRooms.forEach(room=>{
           const rOcc = cityOcc[room.key]||{};
           const names = SLOTS.slice(0,5).map(s=>rOcc[s]||"");
-          const row = ws.addRow([n++, room.type, ...names]);
+          const row = ws.addRow([n++, room.type, room.gender==="F"?"Female":"Male", ...names]);
           row.height = 20;
           const genderTint = room.gender==="F" ? "FFFDECEC" : "FFEAF3FC";
           row.eachCell({includeEmpty:true},cell=>{
@@ -112,6 +112,7 @@ export function AssignmentsView({trip,admin,onBack}){
           });
           row.getCell(1).alignment = {horizontal:"center",vertical:"middle"};
           row.getCell(2).alignment = {horizontal:"center",vertical:"middle"};
+          row.getCell(3).alignment = {horizontal:"center",vertical:"middle"};
         });
         ws.addRow([]);
       });
