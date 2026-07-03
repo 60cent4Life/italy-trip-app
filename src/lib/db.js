@@ -213,6 +213,14 @@ export async function releaseSlot(tripId, city, roomKey, slot) {
   if (error) throw error;
 }
 
+// Clears every room assignment for a single city (used to undo a bad
+// bulk import so it can be safely re-run without leaving orphaned rows).
+export async function clearCityAssignments(tripId, city) {
+  const { error } = await supabase.from('room_selections')
+    .delete().eq('trip_id', tripId).eq('city', city);
+  if (error) throw error;
+}
+
 // Release whatever slot a student currently has in a city (used before re-picking)
 export async function releaseStudentCityPick(tripId, city, studentName) {
   const { error } = await supabase.from('room_selections')
