@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { CITY_CLR, BG, CARD, BORD, DIM, TXT, GRN, RED, pbtn, TopBar, Spinner, flattenRooms, occupiedMap } from "../shared.jsx";
 import { getRoster, getSelections, getAllStudentAccounts } from "../lib/db.js";
 
-export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onViewAssignments,onManualAssign,onGoHome,onEnterAsStudent,onStudentAccounts,onRegistrationData,onStudentInfo}){
+export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onViewAssignments,onManualAssign,onGoHome,onEnterAsStudent,onStudentAccounts,onRegistrationData,onStudentInfo,onBulkImport}){
   const [roster,setRoster]=useState([]);
   const [selections,setSelections]=useState({});
   const [accountCount,setAccountCount]=useState(0);
@@ -66,6 +66,7 @@ export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onVie
             {icon:"🛂",label:"Student Info",sub:"Passport #, DOB, allergies & email at a glance",onClick:onStudentInfo},
             {icon:"📋",label:"View Assignments",sub:"See who's in each room",onClick:onViewAssignments},
             {icon:"✏️",label:"Manually Assign / Move Students",sub:"Place or move a student between rooms",onClick:onManualAssign},
+            {icon:"📥",label:"Bulk Import Assignments",sub:"One-time: pre-load room picks from Excel",onClick:onBulkImport,ownerOnly:true},
             {icon:"👤",label:"Student Accounts",sub:"See who has registered & reset passwords",onClick:onStudentAccounts},
             {icon:"📋",label:"Registration Data",sub:"View or upload the organizer's original application data",onClick:onRegistrationData},
           ].map(({icon,label,sub,onClick,ownerOnly})=>{
