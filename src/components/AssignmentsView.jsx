@@ -117,43 +117,22 @@ export function AssignmentsView({trip,admin,onBack}){
         ws.addRow([]);
       });
 
-      // Summary block: quick counts an organizer can glance at without
-      // scrolling back through every room row.
+      // One compact summary row so the sheet stays on a single printed page.
       let femaleCount=0, maleCount=0;
-      const typeCounts={};
       cityRooms.forEach(r=>{
         const filled = Object.keys(cityOcc[r.key]||{}).length;
         if(r.gender==="F") femaleCount+=filled; else maleCount+=filled;
-        typeCounts[r.type] = (typeCounts[r.type]||0)+1;
       });
       const hotelCount = Object.keys(byHotel).length;
 
-      ws.addRow([]);
-      const summaryBand = ws.addRow(["SUMMARY"]);
-      ws.mergeCells(summaryBand.number,1,summaryBand.number,8);
-      summaryBand.height = 22;
-      summaryBand.eachCell({includeEmpty:true},cell=>{
+      const summaryRow = ws.addRow([`${hotelCount} Hotels   ·   ${femaleCount} Female   ·   ${maleCount} Male   ·   ${femaleCount+maleCount} Total Students`]);
+      ws.mergeCells(summaryRow.number,1,summaryRow.number,8);
+      summaryRow.height = 24;
+      summaryRow.eachCell({includeEmpty:true},cell=>{
         cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:`FF${cityColorHex}`}};
       });
-      summaryBand.getCell(1).font = {size:12,bold:true,color:{argb:"FFFFFFFF"}};
-      summaryBand.getCell(1).alignment = {horizontal:"left",vertical:"middle"};
-
-      const summaryStats = [
-        ["Hotels", hotelCount],
-        ["Female Students", femaleCount],
-        ["Male Students", maleCount],
-        ["Total Students", femaleCount+maleCount],
-        ...ROOM_TYPES.filter(t=>typeCounts[t]>0).map(t=>[`${t} Rooms`, typeCounts[t]]),
-      ];
-      summaryStats.forEach(([label,value])=>{
-        const row = ws.addRow([label,"","",value]);
-        ws.mergeCells(row.number,1,row.number,3);
-        row.getCell(1).font = {size:11,bold:true,color:{argb:"FF1A1A1A"}};
-        row.getCell(1).alignment = {horizontal:"left"};
-        row.getCell(4).font = {size:11,color:{argb:"FF1A1A1A"}};
-        row.getCell(4).alignment = {horizontal:"left"};
-        [1,2,3,4].forEach(c=>{ row.getCell(c).fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FFF3F3F3"}}; });
-      });
+      summaryRow.getCell(1).font = {size:12,bold:true,color:{argb:"FFFFFFFF"}};
+      summaryRow.getCell(1).alignment = {horizontal:"center",vertical:"middle"};
     });
 
     const buf = await wb.xlsx.writeBuffer();
