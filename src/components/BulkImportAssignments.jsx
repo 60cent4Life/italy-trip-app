@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, Card, Lbl, TopBar, ROOM_TYPES, flattenRooms } from "../shared.jsx";
-import { claimSlot } from "../lib/db.js";
+import { BG, CARD, BORD, DIM, TXT, RED, GRN, inp, pbtn, Card, Lbl, TopBar, ROOM_TYPES, SLOTS, flattenRooms, ConfirmModal } from "../shared.jsx";
+import { claimSlot, clearCityAssignments } from "../lib/db.js";
 
 // Maps the abbreviated room-type text used in an exported hotel sheet
 // ("Quin", "Quad", etc.) to the app's full room type names.
@@ -62,6 +62,16 @@ export function BulkImportAssignments({trip,admin,onBack}){
   const [matched,setMatched]=useState([]);
   const [importing,setImporting]=useState(false);
   const [results,setResults]=useState(null);
+  const [confirmClear,setConfirmClear]=useState(false);
+  const [clearing,setClearing]=useState(false);
+  const [cleared,setCleared]=useState(false);
+
+  const handleClearCity=async()=>{
+    setClearing(true);
+    try{ await clearCityAssignments(trip.id, city); setCleared(true); }
+    catch(e){ alert(e.message||"Could not clear assignments."); }
+    setClearing(false); setConfirmClear(false);
+  };
 
   const handlePreview=()=>{
     const rows = parseSheet(pasteText);
@@ -81,7 +91,7 @@ export function BulkImportAssignments({trip,admin,onBack}){
       if(!row.matchedRoom) continue;
       for(let i=0;i<row.people.length;i++){
         try{
-          await claimSlot(trip.id, city, row.matchedRoom.key, i+1, row.people[i]);
+          await claimSlot(trip.id, city, row.matchedRoom.key, SLOTS[i], row.people[i]);
           claimed++;
         }catch(e){
           if(e.code==="SLOT_TAKEN") taken++; else failed++;
@@ -173,15 +183,31 @@ export function BulkImportAssignments({trip,admin,onBack}){
             Use this to pre-load room assignments you already made outside the app (e.g. in Excel), before students start picking their own rooms. Do this once per city. Make sure you've already set up hotels &amp; rooms for this city under "Configure Hotels &amp; Rooms" first — the counts and room types need to match.
           </div>
           <Lbl>City</Lbl>
-          <select value={city} onChange={e=>setCity(e.target.value)} style={{...inp,marginBottom:16}}>
+          <select value={city} onChange={e=>{setCity(e.target.value);setCleared(false);}} style={{...inp,marginBottom:16}}>
             {trip.cities.map(c=><option key={c} value={c}>{c}</option>)}
           </select>
+          <div style={{background:cleared?"#162318":"#1C1C1C",border:`1px solid ${cleared?GRN:"#30363D"}`,borderRadius:8,padding:"12px 14px",marginBottom:16}}>
+            <div style={{color:cleared?GRN:DIM,fontSize:12,lineHeight:1.5,marginBottom:cleared?0:8}}>
+              {cleared ? `✓ All existing ${city} assignments cleared — safe to import fresh.` : `Re-importing a city that already has assignments (e.g. fixing a mistake) can create duplicates unless you clear it first. Only do this if you're sure — it removes every current room assignment for ${city}.`}
+            </div>
+            {!cleared&&<button onClick={()=>setConfirmClear(true)} style={{...pbtn("transparent","#FF7B72","#FF7B72"),padding:"6px 14px",fontSize:12}}>🗑️ Clear existing {city} assignments</button>}
+          </div>
           <Lbl>Paste the sheet for {city}</Lbl>
           <div style={{color:DIM,fontSize:12,marginBottom:8}}>In Excel, select the whole {city} sheet (or just the room rows) and copy (Ctrl+C), then paste here (Ctrl+V).</div>
           <textarea value={pasteText} onChange={e=>setPasteText(e.target.value)} rows={10} placeholder="Paste here…" style={{...inp,fontFamily:"monospace",fontSize:12,marginBottom:16,resize:"vertical"}}/>
           <button onClick={handlePreview} disabled={!pasteText.trim()} style={{...pbtn(RED,"#fff"),padding:"12px 24px",width:"100%",fontSize:15,opacity:pasteText.trim()?1:0.5}}>Preview Matches →</button>
         </Card>
       </div>
+      {confirmClear&&(
+        <ConfirmModal
+          title={`Clear ${city}'s Assignments?`}
+          message={`This permanently removes every current room assignment for ${city} — including any students who already self-registered and picked a room there. Only do this if you're fixing a bad import. This cannot be undone.`}
+          confirmLabel={clearing?"Clearing…":"🗑️ Clear All"}
+          confirmColor={RED}
+          onConfirm={handleClearCity}
+          onCancel={()=>setConfirmClear(false)}
+        />
+      )}
     </div>
   );
 }
