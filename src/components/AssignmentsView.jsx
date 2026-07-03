@@ -63,7 +63,7 @@ export function AssignmentsView({trip,admin,onBack}){
       const byHotel={}; cityRooms.forEach(r=>{ if(!byHotel[r.hotelName]) byHotel[r.hotelName]=[]; byHotel[r.hotelName].push(r); });
 
       const ws = wb.addWorksheet(city, {
-        pageSetup: { orientation:"landscape", fitToPage:true, fitToWidth:1, fitToHeight:0, margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} },
+        pageSetup: { orientation:"landscape", fitToPage:true, fitToWidth:1, fitToHeight:1, margins:{left:0.3,right:0.3,top:0.4,bottom:0.4,header:0.15,footer:0.15} },
       });
       ws.columns = [
         {width:6},{width:14},{width:10},{width:21.36},{width:21.36},{width:21.36},{width:21.36},{width:21.36},
