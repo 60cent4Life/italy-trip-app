@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { SLOTS, CITY_CLR, BG, CARD, BORD, DIM, TXT, RED, GRN, pbtn, TopBar, Spinner, flattenRooms, occupiedMap, getCityDateLabel } from "../shared.jsx";
 import { getRoster, getSelections, getAllStudentAccounts } from "../lib/db.js";
 
@@ -35,7 +36,6 @@ export function AssignmentsView({trip,admin,onBack}){
   };
 
   const rosterLookup={}; roster.forEach(s=>{ rosterLookup[s.name]=infoFor(s.name); });
-  const slotCells=(name)=>{ if(!name) return ["","",""]; const i=rosterLookup[name]||{}; return [name, i.passport||"—", i.dob||"—"]; };
 
   const exportExcel=()=>{
     const wb=XLSX.utils.book_new();
@@ -50,27 +50,80 @@ export function AssignmentsView({trip,admin,onBack}){
     XLSX.writeFile(wb,`${trip.name}_Student_Data.xlsx`);
   };
 
-  const exportOrganizerExcel=()=>{
-    const wb=XLSX.utils.book_new();
-    trip.cities.forEach((city,ci)=>{
-      const cityRooms=rooms[city]||[]; const cityOcc=occ[city]||{};
+  // Builds a colored, print-ready workbook — one sheet per city, landscape,
+  // fit to one page wide — with just the info an organizer needs day-of:
+  // room, type, and who's in it. No passport/DOB clutter.
+  const exportOrganizerExcel=async()=>{
+    const wb = new ExcelJS.Workbook();
+    wb.creator = "Italy Trip Portal";
+
+    trip.cities.forEach(city=>{
+      const cityColorHex = (CITY_CLR[city]||"#C0392B").replace("#","");
+      const cityRooms = rooms[city]||[]; const cityOcc = occ[city]||{};
       const byHotel={}; cityRooms.forEach(r=>{ if(!byHotel[r.hotelName]) byHotel[r.hotelName]=[]; byHotel[r.hotelName].push(r); });
-      const rows=[[city.toUpperCase()],[getCityDateLabel(trip,city)],[]];
+
+      const ws = wb.addWorksheet(city, {
+        pageSetup: { orientation:"landscape", fitToPage:true, fitToWidth:1, fitToHeight:0, margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} },
+      });
+      ws.columns = [
+        {width:6},{width:14},{width:9},{width:22},{width:22},{width:22},{width:22},{width:22},
+      ];
+
+      const titleRow = ws.addRow([city.toUpperCase()]);
+      ws.mergeCells(titleRow.number,1,titleRow.number,8);
+      titleRow.getCell(1).font = {size:18,bold:true,color:{argb:`FF${cityColorHex}`}};
+      titleRow.getCell(1).alignment = {horizontal:"left"};
+
+      const dateRow = ws.addRow([getCityDateLabel(trip,city)]);
+      ws.mergeCells(dateRow.number,1,dateRow.number,8);
+      dateRow.getCell(1).font = {size:11,italic:true,color:{argb:"FF8A9BB0"}};
+      ws.addRow([]);
+
       Object.entries(byHotel).forEach(([hotelName,hRooms])=>{
-        rows.push([hotelName.toUpperCase()]);
-        rows.push(["#","HOTEL","Gender","Type","Room#","Person(A)","Passport","DOB","Person(B)","Passport","DOB","Person(C)","Passport","DOB","Person(D)","Passport","DOB","Person(E)","Passport","DOB","Notes"]);
+        const hotelRow = ws.addRow([hotelName.toUpperCase()]);
+        ws.mergeCells(hotelRow.number,1,hotelRow.number,8);
+        hotelRow.height = 22;
+        hotelRow.eachCell({includeEmpty:true},cell=>{
+          cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:`FF${cityColorHex}`}};
+        });
+        hotelRow.getCell(1).font = {size:12,bold:true,color:{argb:"FFFFFFFF"}};
+        hotelRow.getCell(1).alignment = {horizontal:"left",vertical:"middle"};
+
+        const headerRow = ws.addRow(["#","Type","Person A","Person B","Person C","Person D","Person E",""]);
+        headerRow.height = 18;
+        headerRow.eachCell({includeEmpty:true},cell=>{
+          cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FF2D3748"}};
+          cell.font = {size:10,bold:true,color:{argb:"FFFFFFFF"}};
+          cell.alignment = {horizontal:"center",vertical:"middle"};
+        });
+
         let n=1;
         hRooms.forEach(room=>{
-          const rOcc=cityOcc[room.key]||{};
-          rows.push([n++,hotelName,room.gender==="F"?"Female":"Male",room.type,"",
-            ...slotCells(rOcc["A"]),...slotCells(rOcc["B"]),...slotCells(rOcc["C"]),...slotCells(rOcc["D"]),...slotCells(rOcc["E"]),""]);
+          const rOcc = cityOcc[room.key]||{};
+          const names = SLOTS.slice(0,5).map(s=>rOcc[s]||"");
+          const row = ws.addRow([n++, room.type, ...names]);
+          row.height = 20;
+          const genderTint = room.gender==="F" ? "FFFDECEC" : "FFEAF3FC";
+          row.eachCell({includeEmpty:true},cell=>{
+            cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:genderTint}};
+            cell.font = {size:10,color:{argb:"FF1A1A1A"}};
+            cell.border = {top:{style:"thin",color:{argb:"FFD0D0D0"}},bottom:{style:"thin",color:{argb:"FFD0D0D0"}},left:{style:"thin",color:{argb:"FFD0D0D0"}},right:{style:"thin",color:{argb:"FFD0D0D0"}}};
+            cell.alignment = {vertical:"middle"};
+          });
+          row.getCell(1).alignment = {horizontal:"center",vertical:"middle"};
+          row.getCell(2).alignment = {horizontal:"center",vertical:"middle"};
         });
-        rows.push([]);
+        ws.addRow([]);
       });
-      const ws=XLSX.utils.aoa_to_sheet(rows);
-      XLSX.utils.book_append_sheet(wb,ws,city);
     });
-    XLSX.writeFile(wb,`${trip.name}_Organizer_Sheets.xlsx`);
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], {type:"application/octet-stream"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${trip.name}_Organizer_Sheets.xlsx`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -78,7 +131,7 @@ export function AssignmentsView({trip,admin,onBack}){
       <TopBar title="Room Assignments" sub={trip.name} onBack={onBack} backLabel="Trip Dashboard" adminName={admin?.username}
         right={<div style={{display:"flex",gap:8}}>
           <button onClick={exportExcel} style={{...pbtn("#162318",GRN,GRN),padding:"6px 12px",fontSize:12}}>↓ Student Data</button>
-          <button onClick={exportOrganizerExcel} style={{...pbtn("#1C2B3A","#79C0FF","#79C0FF"),padding:"6px 12px",fontSize:12}}>↓ Organizer Sheets</button>
+          <button onClick={exportOrganizerExcel} style={{...pbtn("#1C2B3A","#79C0FF","#79C0FF"),padding:"6px 12px",fontSize:12}}>↓ Organizer Sheets (Print-Ready)</button>
         </div>}/>
       <div style={{maxWidth:980,margin:"0 auto",padding:"20px 16px"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:10,marginBottom:22}}>
