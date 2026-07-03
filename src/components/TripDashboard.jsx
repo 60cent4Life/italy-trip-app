@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CITY_CLR, BG, CARD, BORD, DIM, TXT, GRN, RED, pbtn, TopBar, Spinner, flattenRooms, occupiedMap } from "../shared.jsx";
+import { CITY_CLR, BG, CARD, BORD, DIM, TXT, GRN, RED, pbtn, TopBar, Spinner, flattenRooms, occupiedMap, getCityDateLabel } from "../shared.jsx";
 import { getRoster, getSelections, getAllStudentAccounts } from "../lib/db.js";
 
 export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onViewAssignments,onManualAssign,onGoHome,onEnterAsStudent,onStudentAccounts,onRegistrationData,onStudentInfo,onBulkImport}){
@@ -57,6 +57,7 @@ export function TripDashboard({trip,admin,onBack,onToggleLive,onSetupRooms,onVie
               <div style={{color:cp,fontSize:10,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:3}}>{city}</div>
               <div style={{color:TXT,fontSize:22}}>{filled}<span style={{color:"#4A5568",fontSize:12}}>/{total}</span></div>
               <div style={{color:GRN,fontSize:11}}>🟢 {total-filled} open</div>
+              <div style={{color:DIM,fontSize:10,marginTop:4}}>{getCityDateLabel(trip,city)}</div>
             </div>
           );})}
         </div>
